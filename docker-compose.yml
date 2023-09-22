@@ -1,0 +1,43 @@
+version: '3.3'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    tty: true
+    volumes:
+      - ./backend:/app
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres
+    env_file:
+      - .env.dev
+    # command: sh -c "go run server.go"
+
+  postgres:
+    build:
+      context: .
+      dockerfile: docker/postgres/Dockerfile
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    env_file:
+      - .env.dev
+
+  pgadmin4:
+    image: dpage/pgadmin4
+    ports:
+      - 8888:80
+    volumes:
+      - pgadmin4_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    env_file:
+      - .env.dev
+
+volumes:
+  postgres_data:
+  pgadmin4_data:

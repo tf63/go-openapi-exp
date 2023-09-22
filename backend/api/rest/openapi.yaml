@@ -1,0 +1,149 @@
+# 参考　https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md
+openapi: "3.0.0"
+
+# https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#info-object
+info:
+  title: "Todo API"
+  description: "todo API"
+  version: 1.0.0
+
+# https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#server-object
+servers:
+  - url: "http://localhost:8080/api"
+    description: development
+  - url: "http://demo.com/api"
+    description: production
+
+# https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#tag-object
+tags:
+  - name: "todo"
+    description: "todo api tag"
+
+# https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#paths-object
+paths:
+  /v1/todos:
+    post:
+      summary: Create an todo entry
+      tags: ["todo"]
+      requestBody:
+        $ref: "#/components/requestBodies/NewTodo"
+      responses:
+        "201":
+          description: Todo entry created successfully
+          headers:
+            Location:
+              $ref: "#/components/headers/LocationHeader"
+          content: {}
+        "503":
+          $ref: "#/components/responses/503_ServiceUnavailable"
+
+    get:
+      summary: Get todo entries
+      tags: ["todo"]
+      responses:
+        "200":
+          description: The requested todo entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todos"
+        "503":
+          $ref: "#/components/responses/503_ServiceUnavailable"
+
+  /v1/todos/{todo_id}:
+    get:
+      summary: Get an todo entry by ID
+      tags: ["todo"]
+      parameters:
+        - name: todo_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        "200":
+          description: The requested todo entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Todo"
+        "404":
+          $ref: "#/components/responses/404_NotFound"
+        "503":
+          $ref: "#/components/responses/503_ServiceUnavailable"
+
+
+# https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#components-object
+components:
+  schemas:
+    # Todo
+    # ----------------------------------------------------------------
+    Todo:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        title: { type: string, example: "task 1" }
+        done: { type: boolean, example: false }
+    Todos:
+      type: array
+      items:
+        $ref: "#/components/schemas/Todo"
+    # Error
+    # ----------------------------------------------------------------
+    NotFound:
+      type: object
+      properties:
+        code: { type: string }
+        type: { type: string }
+        message: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              code: { type: string }
+    ServiceUnavailable:
+      type: object
+      properties:
+        code: { type: string }
+        type: { type: string }
+        message: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              code: { type: string }
+
+  requestBodies:
+    NewTodo:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              title: { type: string, example: "task 1" }
+
+  responses:
+    404_NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/NotFound"
+    503_ServiceUnavailable:
+      description: Service Unavailable
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ServiceUnavailable"
+
+  headers:
+    LocationHeader:
+      description: The location of the newly created item
+      schema:
+        type: string
